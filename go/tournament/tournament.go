@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"sort"
 	"strings"
 )
 
@@ -13,22 +15,22 @@ type teamScore struct {
 	draws         int
 }
 
-type allScores map[string]teamScore
-
-func getLosses(score teamScore) int {
+func getLosses(score *teamScore) int {
 	return score.matchesPlayed - score.wins - score.draws
 }
 
-func getScore(score teamScore) int {
+func getPoints(score *teamScore) int {
 	return 3*score.wins + score.draws
 }
 
 // Check that a team name is valid
-func checkValidTeam(team string) bool {
-	teamNames := []string{"Devastating Donkeys",
-		"Allegoric Alaskans",
+func isValidTeam(team string) bool {
+	teamNames := []string{
+		"Allegoric Alaskians",
 		"Blithering Badgers",
-		"Courageous Californians"}
+		"Courageous Californians",
+		"Devastating Donkeys",
+	}
 	for _, name := range teamNames {
 		if team == name {
 			return true
@@ -37,29 +39,83 @@ func checkValidTeam(team string) bool {
 	return false
 }
 
-func Tally(r io.Reader, w io.Writer) error {
-	scores := make(allScores)
-	line := fmt.Sprintln(r)
-
+func parseSingleTeam(score map[string]*teamScore, line string) (map[string]*teamScore, error) {
 	line_split := strings.Split(line, ";")
-	team_1 := line_split[0]
-	team_2 := line_split[1]
-	scores[team_1] = teamScore.matchesPlayed + 1
-	scores[team_2] = teamScore.matchesPlayed + 1
-	if checkValidTeam(team_1) || checkValidTeam(team_2) {
-		return errors.New("Invalid team name")
+	if len(line_split) < 3 {
+		return score, errors.New("Invalid number of separators")
 	}
-	outcome := line_split[2]
+	team_1, team_2, outcome := line_split[0], line_split[1], line_split[2]
+	fmt.Printf("Team 1: %v, Team 2: %v, Outcome: %v\n", team_1, team_2, outcome)
+	if !isValidTeam(team_1) || !isValidTeam(team_2) {
+		return score, errors.New("Invalid team name")
+	}
+	team_1_matches := score[team_1].matchesPlayed
+	team_2_matches := score[team_2].matchesPlayed
+	score[team_1].matchesPlayed = team_1_matches + 1
+	score[team_2].matchesPlayed = team_2_matches + 1
+
+	team_1_wins := score[team_1].wins
+	team_2_wins := score[team_1].wins
+	team_1_draws := score[team_1].draws
+	team_2_draws := score[team_1].draws
 	if outcome == "win" {
-		scores[team_1] = teamScore.wins + 1
+		score[team_1].wins = team_1_wins + 1
 	} else if outcome == "loss" {
-		scores[team_2] = teamScore.wins + 1		
+		score[team_2].wins = team_2_wins + 1
 	} else if outcome == "draw" {
-		scores[team_1] = teamScore.draws + 1		
-		scores[team_2] = teamScore.draws + 1		
+		score[team_1].draws = team_1_draws + 1
+		score[team_2].draws = team_2_draws + 1
 	} else {
-		return errors.New("Invalid outcome %v", outcome)
+		return score, errors.New("Invalid outcome")
 	}
-	fmt.Printf("Scores:\n%v", scores)
+	return score, nil
+}
+
+func Tally(r io.Reader, w io.Writer) error {
+	// initialise mapping of team -> score
+	allScores := map[string]*teamScore{}
+	allScores["Allegoric Alaskians"] = &teamScore{}
+	allScores["Blithering Badgers"] = &teamScore{}
+	allScores["Courageous Californians"] = &teamScore{}
+	allScores["Devastating Donkeys"] = &teamScore{}
+
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return err
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		if len(line) < 10 {
+			continue
+		}
+		fmt.Printf("line: %v, length: %v\n", line, len(line))
+		newScores, err := parseSingleTeam(allScores, line)
+		if err != nil {
+			return err
+		}
+		allScores = newScores
+	}
+
+	// Sort the teams/scores by the number of points won
+	type kv struct {
+		Key   string
+		Value teamScore
+	}
+	var ss []kv
+	for k, v := range allScores {
+		ss = append(ss, kv{k, *v})
+	}
+	sort.Slice(ss, func(i, j int) bool {
+		return getPoints(&ss[i].Value) > getPoints(&ss[j].Value)
+	})
+
+	fmt.Fprintf(w, "Team\t\t\t       | MP |  W |  D |  L |  P\n")
+	for _, kv := range ss {
+		team := kv.Key
+		score := kv.Value
+		losses := getLosses(&score)
+		points := getPoints(&score)
+		fmt.Fprintf(w, "%v\t       |  %v |  %v |  %v |  %v |  %v\n", team, score.matchesPlayed, score.wins, score.draws, losses, points)
+	}
+	// fmt.Fprintf(w, "\n")
 	return nil
 }
