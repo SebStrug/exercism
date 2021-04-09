@@ -9,113 +9,117 @@ import (
 	"strings"
 )
 
-type teamScore struct {
+// Score stores stats for a team
+type Score struct {
 	matchesPlayed int
 	wins          int
 	draws         int
+	losses        int
+	points        int
 }
 
-func getLosses(score *teamScore) int {
-	return score.matchesPlayed - score.wins - score.draws
+// TeamScore associates scores with a team
+type TeamScore struct {
+	team  string
+	score Score
 }
 
-func getPoints(score *teamScore) int {
+// AllTeamScores contains scores for each team
+var AllTeamScores = map[string]*Score{
+	"Allegoric Alaskians":     {},
+	"Blithering Badgers":      {},
+	"Courageous Californians": {},
+	"Devastating Donkeys":     {},
+}
+
+// GetPoints calculates the total points for a team
+func GetPoints(score *Score) int {
 	return 3*score.wins + score.draws
 }
 
-// Check that a team name is valid
-func isValidTeam(team string) bool {
-	teamNames := []string{
-		"Allegoric Alaskians",
-		"Blithering Badgers",
-		"Courageous Californians",
-		"Devastating Donkeys",
+// Increment updates one of the stats in a score
+func (score *Score) Increment(field string) {
+	if field == "matches" {
+		score.matchesPlayed++
+	} else if field == "wins" {
+		score.wins++
+	} else if field == "draws" {
+		score.draws++
+	} else if field == "losses" {
+		score.losses++
 	}
-	for _, name := range teamNames {
-		if team == name {
-			return true
-		}
-	}
-	return false
 }
 
-func parseSingleTeam(score map[string]*teamScore, line string) (map[string]*teamScore, error) {
-	line_split := strings.Split(line, ";")
-	if len(line_split) < 3 {
-		return score, errors.New("Invalid number of separators")
+// ParseSingleLine adds the data from a single input line to the overall score mapping
+func ParseSingleLine(scores map[string]*Score, line string) (map[string]*Score, error) {
+	lineSplit := strings.Split(line, ";")
+	if len(lineSplit) < 3 {
+		return scores, errors.New("Invalid number of separators")
 	}
-	team_1, team_2, outcome := line_split[0], line_split[1], line_split[2]
-	fmt.Printf("Team 1: %v, Team 2: %v, Outcome: %v\n", team_1, team_2, outcome)
-	if !isValidTeam(team_1) || !isValidTeam(team_2) {
-		return score, errors.New("Invalid team name")
-	}
-	team_1_matches := score[team_1].matchesPlayed
-	team_2_matches := score[team_2].matchesPlayed
-	score[team_1].matchesPlayed = team_1_matches + 1
-	score[team_2].matchesPlayed = team_2_matches + 1
+	team1, team2, outcome := lineSplit[0], lineSplit[1], lineSplit[2]
+	// fmt.Printf("Team 1: %v, Team 2: %v, Outcome: %v\n", team1, team2, outcome)
 
-	team_1_wins := score[team_1].wins
-	team_2_wins := score[team_1].wins
-	team_1_draws := score[team_1].draws
-	team_2_draws := score[team_1].draws
+	if _, ok := AllTeamScores[team1]; !ok {
+		return scores, errors.New("invalid team name")
+	} else if _, ok := AllTeamScores[team2]; !ok {
+		return scores, errors.New("invalid team name")
+	}
+
+	scores[team1].Increment("matches")
+	scores[team2].Increment("matches")
+
 	if outcome == "win" {
-		score[team_1].wins = team_1_wins + 1
+		scores[team1].Increment("wins")
+		scores[team2].Increment("losses")
 	} else if outcome == "loss" {
-		score[team_2].wins = team_2_wins + 1
+		scores[team2].Increment("wins")
+		scores[team1].Increment("losses")
 	} else if outcome == "draw" {
-		score[team_1].draws = team_1_draws + 1
-		score[team_2].draws = team_2_draws + 1
+		scores[team1].Increment("draws")
+		scores[team2].Increment("draws")
 	} else {
-		return score, errors.New("Invalid outcome")
+		return scores, errors.New("Invalid outcome")
 	}
-	return score, nil
+
+	return scores, nil
 }
 
+// Tally parses in team score input as string into a leaderboard
 func Tally(r io.Reader, w io.Writer) error {
-	// initialise mapping of team -> score
-	allScores := map[string]*teamScore{}
-	allScores["Allegoric Alaskians"] = &teamScore{}
-	allScores["Blithering Badgers"] = &teamScore{}
-	allScores["Courageous Californians"] = &teamScore{}
-	allScores["Devastating Donkeys"] = &teamScore{}
-
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return err
 	}
 	for _, line := range strings.Split(string(data), "\n") {
-		if len(line) < 10 {
+		// Ignore invalid lines, comment lines
+		if len(line) < 10 || string(line[0]) == "#" {
 			continue
 		}
-		fmt.Printf("line: %v, length: %v\n", line, len(line))
-		newScores, err := parseSingleTeam(allScores, line)
+
+		// fmt.Printf("line: %v, length: %v\n", line, len(line))
+		newScores, err := ParseSingleLine(AllTeamScores, line)
 		if err != nil {
 			return err
 		}
-		allScores = newScores
+		AllTeamScores = newScores
+	}
+	for _, score := range AllTeamScores {
+		score.points = GetPoints(score)
 	}
 
-	// Sort the teams/scores by the number of points won
-	type kv struct {
-		Key   string
-		Value teamScore
+	// To sort the map by number of points, we must create an array
+	var SortedScores []TeamScore
+	for team, score := range AllTeamScores {
+		SortedScores = append(SortedScores, TeamScore{team, *score})
 	}
-	var ss []kv
-	for k, v := range allScores {
-		ss = append(ss, kv{k, *v})
-	}
-	sort.Slice(ss, func(i, j int) bool {
-		return getPoints(&ss[i].Value) > getPoints(&ss[j].Value)
+	sort.Slice(SortedScores, func(i, j int) bool {
+		return SortedScores[i].score.points > SortedScores[j].score.points
 	})
 
 	fmt.Fprintf(w, "Team\t\t\t       | MP |  W |  D |  L |  P\n")
-	for _, kv := range ss {
-		team := kv.Key
-		score := kv.Value
-		losses := getLosses(&score)
-		points := getPoints(&score)
-		fmt.Fprintf(w, "%v\t       |  %v |  %v |  %v |  %v |  %v\n", team, score.matchesPlayed, score.wins, score.draws, losses, points)
+	for _, ts := range SortedScores {
+		fmt.Fprintf(w, "%v\t       |  %v |  %v |  %v |  %v |  %v\n", ts.team, ts.score.matchesPlayed, ts.score.wins, ts.score.draws, ts.score.losses, ts.score.points)
 	}
-	// fmt.Fprintf(w, "\n")
+	//fmt.Fprintf(w, "\n")
 	return nil
 }
