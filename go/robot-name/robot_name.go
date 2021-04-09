@@ -1,54 +1,53 @@
 package robotname
 
 import (
-	"errors"
 	"fmt"
+	"math/rand"
+	"time"
 )
 
+// Robot is a real life machine
 type Robot struct {
 	name string
 }
 
-var capitalLetters = []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"}
+const capitalLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-var firstLetterIndex = 0
-var secondLetterIndex = 0
-var robotNumber = 0
-var secondRound = false
+var existingNames = make(map[string]bool)
 
-// Generate a string of the form AA999
-func generateName() (string, error) {
-	paddedNum := fmt.Sprintf("%03d", robotNumber)
-	name := fmt.Sprintf("%s%s%s", capitalLetters[firstLetterIndex], capitalLetters[secondLetterIndex], paddedNum)
-	if robotNumber > 999 {
-		robotNumber = 0
-		firstLetterIndex++
-	}
-	if firstLetterIndex >= 26 {
-		firstLetterIndex = 0
-		secondLetterIndex++
-	}
-	if secondLetterIndex >= 26 {
-		secondLetterIndex = 0
-		secondRound = true
-	}
-	robotNumber++
-
-	if secondRound && firstLetterIndex == 0 && secondLetterIndex == 0 && robotNumber == 1 {
-		return "", errors.New("Namespace exhausted")
-	}
-	return name, nil
+// init initialises a random seed
+func init(){
+	rand.Seed(time.Now().UnixNano())
 }
 
+// Generate a string of the form AA999
+func generateName() string {
+	nums := rand.Intn(899)+100
+	letters := make([]byte, 2)
+    for i := range letters {
+        letters[i] = capitalLetters[rand.Intn(len(capitalLetters))]
+    }
+	return fmt.Sprintf("%s%d", letters, nums)
+}
+
+// Name generates a name for a Robot object if it doesn't have one
 func (r *Robot) Name() (string, error) {
 	if len(r.name) > 0 {
 		return r.name, nil
 	}
-	name, err := generateName()
-	r.name = name
-	return r.name, err
+	for {
+		newName := generateName()
+		if _, ok := existingNames[newName]; !ok {
+			existingNames[newName] = true
+			r.name = newName
+			break
+		}
+	}
+	
+	return r.name, nil
 }
 
+// Reset returns a Robot object with no name
 func (r *Robot) Reset() {
 	r.name = ""
 	return
