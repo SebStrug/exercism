@@ -1,1 +1,3 @@
 .vscode/
+go/pkg/*
+go/bin/*
