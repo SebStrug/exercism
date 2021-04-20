@@ -16,18 +16,16 @@ const capitalLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 var existingNames = make(map[string]bool)
 
 // init initialises a random seed
-func init(){
+func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
 // Generate a string of the form AA999
 func generateName() string {
-	nums := rand.Intn(899)+100
-	letters := make([]byte, 2)
-    for i := range letters {
-        letters[i] = capitalLetters[rand.Intn(len(capitalLetters))]
-    }
-	return fmt.Sprintf("%s%d", letters, nums)
+	nums := rand.Intn(899) + 100
+	letters1 := rand.Intn(26) + 'A'
+	letters2 := rand.Intn(26) + 'A'
+	return fmt.Sprintf("%c%c%d", letters1, letters2, nums)
 }
 
 // Name generates a name for a Robot object if it doesn't have one
@@ -43,7 +41,7 @@ func (r *Robot) Name() (string, error) {
 			break
 		}
 	}
-	
+
 	return r.name, nil
 }
 
