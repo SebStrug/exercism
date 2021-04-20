@@ -11,8 +11,6 @@ type Robot struct {
 	name string
 }
 
-const capitalLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
 var existingNames = make(map[string]bool)
 
 // init initialises a random seed
@@ -48,5 +46,4 @@ func (r *Robot) Name() (string, error) {
 // Reset returns a Robot object with no name
 func (r *Robot) Reset() {
 	r.name = ""
-	return
 }
