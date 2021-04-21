@@ -116,10 +116,16 @@ func Tally(r io.Reader, w io.Writer) error {
 		return SortedScores[i].score.points > SortedScores[j].score.points
 	})
 
-	fmt.Fprintf(w, "Team\t\t\t       | MP |  W |  D |  L |  P\n")
-	for _, ts := range SortedScores {
-		fmt.Fprintf(w, "%v\t       |  %v |  %v |  %v |  %v |  %v\n", ts.team, ts.score.matchesPlayed, ts.score.wins, ts.score.draws, ts.score.losses, ts.score.points)
+	fmt.Fprintf(w, `Team                           | MP |  W |  D |  L |  P
+`)
+	for ind, ts := range SortedScores {
+		if ind == len(SortedScores) -1 {
+			fmt.Fprintf(w, `%-31v|  %v |  %v |  %v |  %v |  %v
+`, ts.team, ts.score.matchesPlayed, ts.score.wins, ts.score.draws, ts.score.losses, ts.score.points)
+		} else {
+			fmt.Fprintf(w, `%-31v|  %v |  %v |  %v |  %v |  %v
+`, ts.team, ts.score.matchesPlayed, ts.score.wins, ts.score.draws, ts.score.losses, ts.score.points)
+		}
 	}
-	//fmt.Fprintf(w, "\n")
 	return nil
 }
