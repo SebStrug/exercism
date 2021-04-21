@@ -54,7 +54,7 @@ func (score *Score) Increment(field string) {
 func ParseSingleLine(scores map[string]*Score, line string) (map[string]*Score, error) {
 	lineSplit := strings.Split(line, ";")
 	if len(lineSplit) < 3 {
-		return scores, errors.New("Invalid number of separators")
+		return scores, errors.New("invalid number of separators")
 	}
 	team1, team2, outcome := lineSplit[0], lineSplit[1], lineSplit[2]
 	// fmt.Printf("Team 1: %v, Team 2: %v, Outcome: %v\n", team1, team2, outcome)
@@ -78,7 +78,7 @@ func ParseSingleLine(scores map[string]*Score, line string) (map[string]*Score, 
 		scores[team1].Increment("draws")
 		scores[team2].Increment("draws")
 	} else {
-		return scores, errors.New("Invalid outcome")
+		return scores, errors.New("invalid outcome")
 	}
 
 	return scores, nil
