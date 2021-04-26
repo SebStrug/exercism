@@ -33,7 +33,7 @@ func (r *Robot) Name() (string, error) {
 	}
 	for {
 		newName := generateName()
-		if _, ok := existingNames[newName]; !ok {
+		if !existingNames[newName] {
 			existingNames[newName] = true
 			r.name = newName
 			break
