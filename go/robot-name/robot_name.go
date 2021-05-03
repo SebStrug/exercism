@@ -38,13 +38,11 @@ func (r *Robot) Name() (string, error) {
 		return r.name, nil
 	}
 
-	for {
+	r.name = generateName()
+	for existingNames[r.name] {
 		r.name = generateName()
-		if !existingNames[r.name] {
-			existingNames[r.name] = true
-			break
-		}
 	}
+	existingNames[r.name] = true
 
 	return r.name, nil
 }
