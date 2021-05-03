@@ -41,11 +41,11 @@ func (r *Robot) Name() (string, error) {
 		}
 		return r.name, nil
 	}
+
 	for {
-		newName := generateName()
-		if !existingNames[newName] {
-			existingNames[newName] = true
-			r.name = newName
+		r.name = generateName()
+		if !existingNames[r.name] {
+			existingNames[r.name] = true
 			break
 		}
 	}
