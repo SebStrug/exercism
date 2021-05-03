@@ -16,8 +16,6 @@ type Robot struct {
 
 var existingNames = make(map[string]bool)
 
-var namePattern = regexp.MustCompile("[A-Z]{2}[0-9]{3}")
-
 // init initialises a random seed
 func init() {
 	rand.Seed(time.Now().UnixNano())
@@ -37,9 +35,6 @@ func (r *Robot) Name() (string, error) {
 		return "", errors.New("exhausted all possible names")
 	}
 	if len(r.name) > 0 {
-		if !namePattern.MatchString(r.name) {
-			return "", errors.New("robot name is invalid")
-		}
 		return r.name, nil
 	}
 
