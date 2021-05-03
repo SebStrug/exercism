@@ -1,8 +1,10 @@
 package robotname
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
+	"regexp"
 	"time"
 )
 
@@ -12,6 +14,8 @@ type Robot struct {
 }
 
 var existingNames = make(map[string]bool)
+
+var namePattern = regexp.MustCompile("[A-Z]{2}[0-9]{3}")
 
 // init initialises a random seed
 func init() {
@@ -29,6 +33,9 @@ func generateName() string {
 // Name generates a name for a Robot object if it doesn't have one
 func (r *Robot) Name() (string, error) {
 	if len(r.name) > 0 {
+		if !namePattern.MatchString(r.name) {
+			return "", errors.New("robot name is invalid")
+		}
 		return r.name, nil
 	}
 	for {
