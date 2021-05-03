@@ -4,9 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"regexp"
 	"time"
 )
+
+const maxNames int = 676000
 
 // Robot is a real life machine
 type Robot struct {
@@ -32,7 +33,7 @@ func generateName() string {
 
 // Name generates a name for a Robot object if it doesn't have one
 func (r *Robot) Name() (string, error) {
-	if len(existingNames) == 676000 {
+	if len(existingNames) == maxNames {
 		return "", errors.New("exhausted all possible names")
 	}
 	if len(r.name) > 0 {
