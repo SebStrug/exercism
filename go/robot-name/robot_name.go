@@ -32,6 +32,9 @@ func generateName() string {
 
 // Name generates a name for a Robot object if it doesn't have one
 func (r *Robot) Name() (string, error) {
+	if len(existingNames) == 676000 {
+		return "", errors.New("exhausted all possible names")
+	}
 	if len(r.name) > 0 {
 		if !namePattern.MatchString(r.name) {
 			return "", errors.New("robot name is invalid")
