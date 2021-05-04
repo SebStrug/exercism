@@ -2,10 +2,7 @@
 
 package robotname
 
-import (
-	"fmt"
-	"testing"
-)
+import "testing"
 
 var maxNames = 26 * 26 * 10 * 10 * 10
 
@@ -24,7 +21,6 @@ func TestCollisions(t *testing.T) {
 
 	// Test that name exhaustion is handled more or less correctly.
 	_, err := New().Name()
-	fmt.Printf("Values: %v, %v, %v, %v\n", secondRound, firstLetterIndex, secondLetterIndex, robotNumber)
 	if err == nil {
 		t.Fatalf("should return error if namespace is exhausted")
 	}
