@@ -5,8 +5,6 @@ import (
 	"io"
 	"strings"
 	"testing"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 // Define a function Tally(io.Reader, io.Writer) error.
@@ -119,8 +117,8 @@ func TestTallyHappy(t *testing.T) {
 				tt.description, err)
 		}
 		if actual != tt.expected {
-			t.Fatalf("Tally for input named %q was different from expectation: %s",
-				tt.description, cmp.Diff(tt.expected, actual))
+			t.Fatalf("Tally for input named %q was expected to return...\n%s\n...but returned...\n%s",
+				tt.description, tt.expected, actual)
 		}
 	}
 }

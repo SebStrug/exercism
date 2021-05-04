@@ -104,7 +104,13 @@ func Tally(r io.Reader, w io.Writer) error {
 		SortedScores = append(SortedScores, TeamScore{team, *score})
 	}
 	sort.Slice(SortedScores, func(i, j int) bool {
-		return SortedScores[i].score.points > SortedScores[j].score.points
+		if SortedScores[i].score.points > SortedScores[j].score.points{
+			return true
+		}
+		if SortedScores[i].score.points < SortedScores[j].score.points{
+			return false
+		}
+		return SortedScores[i].team < SortedScores[j].team
 	})
 
 	fmt.Fprintf(w, `%-31v| %v |  %v |  %v |  %v |  %v`, "Team", "MP", "W", "D", "L", "P")
