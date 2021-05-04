@@ -23,10 +23,10 @@ func init() {
 
 // Generate a string of the form AA999
 func generateName() string {
-	nums := fmt.Sprintf("%03d", rand.Intn(1000))
+	num :=  rand.Intn(1000)
 	letters1 := rand.Intn(26) + 'A'
 	letters2 := rand.Intn(26) + 'A'
-	return fmt.Sprintf("%c%c%s", letters1, letters2, nums)
+	return fmt.Sprintf("%c%c%03d", letters1, letters2, num)
 }
 
 // Name generates a name for a Robot object if it doesn't have one
