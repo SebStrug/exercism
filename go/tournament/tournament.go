@@ -90,42 +90,38 @@ func Tally(r io.Reader, w io.Writer) error {
 	if err != nil {
 		return err
 	}
+
+	allScores := make(map[string]*Score)
+	
 	for _, line := range strings.Split(string(data), "\n") {
 		// Ignore invalid lines, comment lines
 		if len(line) < 10 || string(line[0]) == "#" {
 			continue
 		}
-
-		// fmt.Printf("line: %v, length: %v\n", line, len(line))
-		newScores, err := ParseSingleLine(AllTeamScores, line)
+		
+		err = ParseSingleLine(allScores, line)
 		if err != nil {
 			return err
 		}
-		AllTeamScores = newScores
 	}
-	for _, score := range AllTeamScores {
+	for _, score := range allScores {
 		score.points = GetPoints(score)
 	}
 
 	// To sort the map by number of points, we must create an array
 	var SortedScores []TeamScore
-	for team, score := range AllTeamScores {
+	for team, score := range allScores {
 		SortedScores = append(SortedScores, TeamScore{team, *score})
 	}
 	sort.Slice(SortedScores, func(i, j int) bool {
 		return SortedScores[i].score.points > SortedScores[j].score.points
 	})
 
-	fmt.Fprintf(w, `Team                           | MP |  W |  D |  L |  P
-`)
-	for ind, ts := range SortedScores {
-		if ind == len(SortedScores) -1 {
-			fmt.Fprintf(w, `%-31v|  %v |  %v |  %v |  %v |  %v
-`, ts.team, ts.score.matchesPlayed, ts.score.wins, ts.score.draws, ts.score.losses, ts.score.points)
-		} else {
-			fmt.Fprintf(w, `%-31v|  %v |  %v |  %v |  %v |  %v
-`, ts.team, ts.score.matchesPlayed, ts.score.wins, ts.score.draws, ts.score.losses, ts.score.points)
-		}
+	fmt.Fprintf(w, `%-31v| %v |  %v |  %v |  %v |  %v`, "Team", "MP", "W", "D", "L", "P")
+	for _, ts := range SortedScores {
+		fmt.Fprintf(w, "\n")
+		fmt.Fprintf(w, `%-31v|  %v |  %v |  %v |  %v |  %v`, ts.team, ts.score.matchesPlayed, ts.score.wins, ts.score.draws, ts.score.losses, ts.score.points)
 	}
+	fmt.Fprintf(w, "\n")
 	return nil
 }
