@@ -24,14 +24,6 @@ type TeamScore struct {
 	score Score
 }
 
-// AllTeamScores contains scores for each team
-var AllTeamScores = map[string]*Score{
-	"Allegoric Alaskians":     {},
-	"Blithering Badgers":      {},
-	"Courageous Californians": {},
-	"Devastating Donkeys":     {},
-}
-
 // GetPoints calculates the total points for a team
 func GetPoints(score *Score) int {
 	return 3*score.wins + score.draws
@@ -51,18 +43,16 @@ func (score *Score) Increment(field string) {
 }
 
 // ParseSingleLine adds the data from a single input line to the overall score mapping
-func ParseSingleLine(scores map[string]*Score, line string) (map[string]*Score, error) {
+func ParseSingleLine(scores map[string]*Score, line string) error {
 	lineSplit := strings.Split(line, ";")
 	if len(lineSplit) < 3 {
-		return scores, errors.New("invalid number of separators")
+		return errors.New("invalid number of separators")
 	}
 	team1, team2, outcome := lineSplit[0], lineSplit[1], lineSplit[2]
-	// fmt.Printf("Team 1: %v, Team 2: %v, Outcome: %v\n", team1, team2, outcome)
-
-	if _, ok := AllTeamScores[team1]; !ok {
-		return scores, errors.New("invalid team name")
-	} else if _, ok := AllTeamScores[team2]; !ok {
-		return scores, errors.New("invalid team name")
+	if _, ok := scores[team1]; !ok {
+	    return errors.New("invalid team name")
+	} else if _, ok := scores[team2]; !ok {
+	    return errors.New("invalid team name")
 	}
 
 	scores[team1].Increment("matches")
@@ -78,10 +68,10 @@ func ParseSingleLine(scores map[string]*Score, line string) (map[string]*Score, 
 		scores[team1].Increment("draws")
 		scores[team2].Increment("draws")
 	} else {
-		return scores, errors.New("invalid outcome")
+		return errors.New("invalid outcome")
 	}
 
-	return scores, nil
+	return nil
 }
 
 // Tally parses in team score input as string into a leaderboard
@@ -91,14 +81,14 @@ func Tally(r io.Reader, w io.Writer) error {
 		return err
 	}
 
-	allScores := make(map[string]*Score)
-	
+	allScores := map[string]*Score{"Allegoric Alaskians": {}, "Blithering Badgers": {}, "Courageous Californians": {}, "Devastating Donkeys": {}}
+
 	for _, line := range strings.Split(string(data), "\n") {
-		// Ignore invalid lines, comment lines
-		if len(line) < 10 || string(line[0]) == "#" {
+		// Ignore comment lines
+		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		
+
 		err = ParseSingleLine(allScores, line)
 		if err != nil {
 			return err
