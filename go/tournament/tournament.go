@@ -103,6 +103,7 @@ func Tally(r io.Reader, w io.Writer) error {
 	for team, score := range allScores {
 		SortedScores = append(SortedScores, TeamScore{team, *score})
 	}
+	// Sort by points, if equal points, sort by name ascending
 	sort.Slice(SortedScores, func(i, j int) bool {
 		if SortedScores[i].score.points > SortedScores[j].score.points{
 			return true
