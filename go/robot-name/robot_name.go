@@ -23,7 +23,7 @@ func init() {
 
 // Generate a string of the form AA999
 func generateName() string {
-	num :=  rand.Intn(1000)
+	num := rand.Intn(1000)
 	letters1 := rand.Intn(26) + 'A'
 	letters2 := rand.Intn(26) + 'A'
 	return fmt.Sprintf("%c%c%03d", letters1, letters2, num)
