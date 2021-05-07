@@ -11,11 +11,9 @@ import (
 
 // Score stores stats for a team
 type Score struct {
-	matchesPlayed int
-	wins          int
-	draws         int
-	losses        int
-	points        int
+	wins   int
+	draws  int
+	losses int
 }
 
 // TeamScore associates scores with a team
@@ -24,22 +22,28 @@ type TeamScore struct {
 	score Score
 }
 
-// GetPoints calculates the total points for a team
-func GetPoints(score *Score) int {
-	return 3*score.wins + score.draws
-}
+// validOutcomes contains the possible outcomes for a game
+var validOutcomes = map[string]bool{"win": true, "loss": true, "draw": true}
 
-// Increment updates one of the stats in a score
-func (score *Score) Increment(field string) {
-	if field == "matches" {
-		score.matchesPlayed++
-	} else if field == "wins" {
+// Update the score for a team given an outcome
+func (score *Score) Update(field string) {
+	if field == "win" {
 		score.wins++
-	} else if field == "draws" {
+	} else if field == "draw" {
 		score.draws++
-	} else if field == "losses" {
+	} else if field == "loss" {
 		score.losses++
 	}
+}
+
+// MatchesPlayed calculates the number of games played by a team
+func (score *Score) MatchesPlayed() int {
+	return score.wins + score.draws + score.losses
+}
+
+// Points calculates the total score value for a team
+func (score *Score) Points() int {
+	return 3*score.wins + score.draws
 }
 
 // ParseSingleLine adds the data from a single input line to the overall score mapping
@@ -50,27 +54,22 @@ func ParseSingleLine(scores map[string]*Score, line string) error {
 	}
 	team1, team2, outcome := lineSplit[0], lineSplit[1], lineSplit[2]
 	if _, ok := scores[team1]; !ok {
-	    return errors.New("invalid team name")
+		return errors.New("invalid team name")
 	} else if _, ok := scores[team2]; !ok {
-	    return errors.New("invalid team name")
+		return errors.New("invalid team name")
 	}
-
-	scores[team1].Increment("matches")
-	scores[team2].Increment("matches")
-
-	if outcome == "win" {
-		scores[team1].Increment("wins")
-		scores[team2].Increment("losses")
-	} else if outcome == "loss" {
-		scores[team2].Increment("wins")
-		scores[team1].Increment("losses")
-	} else if outcome == "draw" {
-		scores[team1].Increment("draws")
-		scores[team2].Increment("draws")
-	} else {
+	if _, ok := validOutcomes[outcome]; !ok {
 		return errors.New("invalid outcome")
 	}
 
+	scores[team1].Update(outcome)
+	if outcome == "win" {
+		scores[team2].Update("loss")
+	} else if outcome == "loss" {
+		scores[team2].Update("win")
+	} else {
+		scores[team2].Update(outcome)
+	}
 	return nil
 }
 
@@ -94,9 +93,6 @@ func Tally(r io.Reader, w io.Writer) error {
 			return err
 		}
 	}
-	for _, score := range allScores {
-		score.points = GetPoints(score)
-	}
 
 	// To sort the map by number of points, we must create an array
 	var SortedScores []TeamScore
@@ -105,19 +101,16 @@ func Tally(r io.Reader, w io.Writer) error {
 	}
 	// Sort by points, if equal points, sort by name ascending
 	sort.Slice(SortedScores, func(i, j int) bool {
-		if SortedScores[i].score.points > SortedScores[j].score.points{
-			return true
+		if SortedScores[i].score.Points() == SortedScores[j].score.Points() {
+			return SortedScores[i].team < SortedScores[j].team
 		}
-		if SortedScores[i].score.points < SortedScores[j].score.points{
-			return false
-		}
-		return SortedScores[i].team < SortedScores[j].team
+		return SortedScores[i].score.Points() > SortedScores[j].score.Points()
 	})
 
 	fmt.Fprintf(w, `%-31v| %v |  %v |  %v |  %v |  %v`, "Team", "MP", "W", "D", "L", "P")
 	for _, ts := range SortedScores {
 		fmt.Fprintf(w, "\n")
-		fmt.Fprintf(w, `%-31v|  %v |  %v |  %v |  %v |  %v`, ts.team, ts.score.matchesPlayed, ts.score.wins, ts.score.draws, ts.score.losses, ts.score.points)
+		fmt.Fprintf(w, `%-31v|  %v |  %v |  %v |  %v |  %v`, ts.team, ts.score.MatchesPlayed(), ts.score.wins, ts.score.draws, ts.score.losses, ts.score.Points())
 	}
 	fmt.Fprintf(w, "\n")
 	return nil
