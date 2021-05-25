@@ -1,10 +1,10 @@
 package tournament
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"sort"
 	"strings"
 )
@@ -56,23 +56,23 @@ func ParseSingleLine(scores map[string]Score, line string) error {
 
 // Tally parses in team score input as string into a leaderboard
 func Tally(r io.Reader, w io.Writer) error {
-	data, err := ioutil.ReadAll(r)
-	if err != nil {
-		return err
-	}
-
 	allScores := make(map[string]Score)
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := scanner.Text()
 
-	for _, line := range strings.Split(string(data), "\n") {
 		// Ignore comment lines
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
 
-		err = ParseSingleLine(allScores, line)
+		err := ParseSingleLine(allScores, line)
 		if err != nil {
 			return err
 		}
+	}
+	if err := scanner.Err(); err != nil {
+		return err
 	}
 
 	// To sort the map by number of points, we must create an array
