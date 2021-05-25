@@ -20,16 +20,8 @@ type Score struct {
 // validOutcomes contains the possible outcomes for a game
 var validOutcomes = map[string]bool{"win": true, "loss": true, "draw": true}
 
-// Update the score for a team given an outcome
-func (score *Score) Update(field string) {
-	if field == "win" {
-		score.wins++
-	} else if field == "draw" {
-		score.draws++
-	} else if field == "loss" {
-		score.losses++
-	}
-}
+// validNames contains the valid team names
+var validNames = map[string]bool{"Allegoric Alaskians": true, "Blithering Badgers": true, "Courageous Californians": true, "Devastating Donkeys": true}
 
 // MatchesPlayed calculates the number of games played by a team
 func (score *Score) MatchesPlayed() int {
@@ -49,9 +41,9 @@ func ParseSingleLine(scores map[string]Score, line string) error {
 	}
 
 	team1, team2, outcome := lineSplit[0], lineSplit[1], lineSplit[2]
-	if _, ok := scores[team1]; !ok {
+	if _, ok := validNames[team1]; !ok {
 		return errors.New("invalid team name")
-	} else if _, ok := scores[team2]; !ok {
+	} else if _, ok := validNames[team2]; !ok {
 		return errors.New("invalid team name")
 	}
 	if _, ok := validOutcomes[outcome]; !ok {
