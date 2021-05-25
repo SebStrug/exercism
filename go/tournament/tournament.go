@@ -17,9 +17,6 @@ type Score struct {
 	losses int
 }
 
-// validNames contains the valid team names
-var validNames = map[string]bool{"Allegoric Alaskians": true, "Blithering Badgers": true, "Courageous Californians": true, "Devastating Donkeys": true}
-
 // MatchesPlayed calculates the number of games played by a team
 func (score *Score) MatchesPlayed() int {
 	return score.wins + score.draws + score.losses
@@ -36,13 +33,7 @@ func ParseSingleLine(scores map[string]Score, line string) error {
 	if len(lineSplit) < 3 {
 		return errors.New("invalid number of separators")
 	}
-
 	team1, team2, outcome := lineSplit[0], lineSplit[1], lineSplit[2]
-	if _, ok := validNames[team1]; !ok {
-		return errors.New("invalid team name")
-	} else if _, ok := validNames[team2]; !ok {
-		return errors.New("invalid team name")
-	}
 
 	a, b := scores[team1], scores[team2]
 	a.name, b.name = team1, team2
