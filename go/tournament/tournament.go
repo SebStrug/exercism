@@ -76,7 +76,7 @@ func Tally(r io.Reader, w io.Writer) error {
 	}
 
 	// To sort the map by number of points, we must create an array
-	var SortedScores []Score
+	SortedScores := make([]Score, len(allScores))
 	for _, score := range allScores {
 		SortedScores = append(SortedScores, score)
 	}
@@ -90,6 +90,9 @@ func Tally(r io.Reader, w io.Writer) error {
 
 	fmt.Fprintf(w, `%-31v| %v |  %v |  %v |  %v |  %v`, "Team", "MP", "W", "D", "L", "P")
 	for _, ts := range SortedScores {
+		if ts.name == "" {
+			continue
+		}
 		fmt.Fprintf(w, "\n")
 		fmt.Fprintf(w, `%-31v|  %v |  %v |  %v |  %v |  %v`, ts.name, ts.MatchesPlayed(), ts.wins, ts.draws, ts.losses, ts.Points())
 	}
