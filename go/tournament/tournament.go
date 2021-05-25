@@ -17,9 +17,6 @@ type Score struct {
 	losses int
 }
 
-// validOutcomes contains the possible outcomes for a game
-var validOutcomes = map[string]bool{"win": true, "loss": true, "draw": true}
-
 // validNames contains the valid team names
 var validNames = map[string]bool{"Allegoric Alaskians": true, "Blithering Badgers": true, "Courageous Californians": true, "Devastating Donkeys": true}
 
@@ -46,9 +43,6 @@ func ParseSingleLine(scores map[string]Score, line string) error {
 	} else if _, ok := validNames[team2]; !ok {
 		return errors.New("invalid team name")
 	}
-	if _, ok := validOutcomes[outcome]; !ok {
-		return errors.New("invalid outcome")
-	}
 
 	a, b := scores[team1], scores[team2]
 	a.name, b.name = team1, team2
@@ -62,6 +56,8 @@ func ParseSingleLine(scores map[string]Score, line string) error {
 	case "draw":
 		a.draws++
 		b.draws++
+	default:
+		return errors.New("invalid outcome")
 	}
 	scores[team1], scores[team2] = a, b
 	return nil
