@@ -37,17 +37,13 @@ var wordMap = map[int64]string{
 
 // spellTens spells the tens part of numbers from 0 - 1e2-1
 func spellTens(num int64) string {
-	if num == 0 {
-		return ""
-	}
 	if spelling, ok := wordMap[num]; ok {
 		return spelling
 	}
 	singleDigit := num % 10
 	singleDigitSpelling := wordMap[singleDigit]
 	tensDigitSpelling := wordMap[num-singleDigit]
-	spelling := tensDigitSpelling + "-" + singleDigitSpelling
-	return spelling
+	return tensDigitSpelling + "-" + singleDigitSpelling
 }
 
 // spellHundreds spells the hundreds part of numbers from 0 - 1e3-1
@@ -65,10 +61,6 @@ func spellHundreds(numHundreds int64, tensDigit int64) string {
 // spellDigits spells the base (billions, millions, thousands) part
 // of a number from 0 - 1e12-1
 func spellDigits(numDigits int64, base string) string {
-	if numDigits == 0 {
-		return ""
-	}
-
 	spelling := ""
 	if numDigits > 99 {
 		numHundreds := (numDigits % 1000) / 100
@@ -98,7 +90,10 @@ func Say(num int64) (string, bool) {
 	numBillions := num / 1000000000
 
 	spelling := ""
-	spelling += spellDigits(numBillions, "billion")
+	if numBillions > 0 {
+		spelling += " "
+		spelling += spellDigits(numBillions, "billion")
+	}
 	if numMillions > 0 {
 		spelling += " "
 		spelling += spellDigits(numMillions, "million")
