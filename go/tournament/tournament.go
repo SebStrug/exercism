@@ -2,7 +2,6 @@ package tournament
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -31,7 +30,7 @@ func (score *Score) Points() int {
 func ParseSingleLine(scores map[string]Score, line string) error {
 	lineSplit := strings.Split(line, ";")
 	if len(lineSplit) < 3 {
-		return errors.New("invalid number of separators")
+		return fmt.Errorf("tournament: invalid number of separators for line: %s", lineSplit)
 	}
 	team1, team2, outcome := lineSplit[0], lineSplit[1], lineSplit[2]
 
@@ -48,7 +47,7 @@ func ParseSingleLine(scores map[string]Score, line string) error {
 		a.draws++
 		b.draws++
 	default:
-		return errors.New("invalid outcome")
+		return fmt.Errorf("tournament: invalid outcome: %s", outcome)
 	}
 	scores[team1], scores[team2] = a, b
 	return nil
