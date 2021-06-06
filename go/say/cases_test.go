@@ -56,6 +56,11 @@ var testCases = []struct {
 		expected:    "one thousand two hundred thirty-four",
 	},
 	{
+		description: "three hundred twenty-one thousand two hundred thirty-four",
+		input:       321234,
+		expected:    "three hundred twenty-one thousand two hundred thirty-four",
+	},
+	{
 		description: "one million",
 		input:       1000000,
 		expected:    "one million",
