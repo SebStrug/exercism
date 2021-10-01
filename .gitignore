@@ -3,3 +3,6 @@ go/pkg/*
 go/bin/*
 go/*/go.mod
 go/*/go.sum
+
+*/**/*.md
+*/**/.exercism/**
